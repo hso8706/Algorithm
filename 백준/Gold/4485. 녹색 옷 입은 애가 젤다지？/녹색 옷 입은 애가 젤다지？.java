@@ -18,16 +18,6 @@ public class Main {
     static int[] dx = new int[]{1, 0, -1, 0};
     static int[] dy = new int[]{0, 1, 0, -1};
 
-    static class Pair {
-        int x;
-        int y;
-
-        public Pair(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
     public static void main(String[] args) throws IOException {
         int tc = 1;
         while (true) {
@@ -43,7 +33,7 @@ public class Main {
                 }
             }
             sumRupee[0][0] = cave[0][0];
-            makeSumRupeeBFS(new Pair(0,0));
+            makeSumRupeeBFS(new int[]{0, 0});
             bw.write("Problem " + tc + ": " + sumRupee[N - 1][N - 1] + "\n");
             tc++;
         }
@@ -51,14 +41,14 @@ public class Main {
         bw.close();
     }
 
-    private static void makeSumRupeeBFS(Pair start) {
-        Queue<Pair> queue = new ArrayDeque<>();
+    private static void makeSumRupeeBFS(int[] start) {
+        Queue<int[]> queue = new ArrayDeque<>();
         queue.offer(start);
 
         while (!queue.isEmpty()) { // x가 세로
-            Pair current = queue.poll();
-            int cx = current.x;
-            int cy = current.y;
+            int[] current = queue.poll();
+            int cx = current[0];
+            int cy = current[1];
 
             for (int i = 0; i < 4; i++) {
                 int nx = cx + dx[i];
@@ -67,7 +57,7 @@ public class Main {
                 int ns = sumRupee[cx][cy] + cave[nx][ny];
                 if (ns < sumRupee[nx][ny]) {
                     sumRupee[nx][ny] = ns;
-                    queue.offer(new Pair(nx, ny));
+                    queue.offer(new int[]{nx, ny, ns});
                 }
             }
         }
