@@ -1,6 +1,5 @@
 import java.io.*;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Queue;
 import java.util.StringTokenizer;
 
@@ -19,6 +18,16 @@ public class Main {
     static int[] dx = new int[]{1, 0, -1, 0};
     static int[] dy = new int[]{0, 1, 0, -1};
 
+    static class Pair {
+        int x;
+        int y;
+
+        public Pair(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         int tc = 1;
         while (true) {
@@ -33,7 +42,8 @@ public class Main {
                     sumRupee[i][j] = Integer.MAX_VALUE;
                 }
             }
-            makeSumRupeeBFS(new int[]{0, 0, cave[0][0]});
+            sumRupee[0][0] = cave[0][0];
+            makeSumRupeeBFS(new Pair(0,0));
             bw.write("Problem " + tc + ": " + sumRupee[N - 1][N - 1] + "\n");
             tc++;
         }
@@ -41,24 +51,23 @@ public class Main {
         bw.close();
     }
 
-    private static void makeSumRupeeBFS(int[] start) {
-        Queue<int[]> queue = new ArrayDeque<>();
+    private static void makeSumRupeeBFS(Pair start) {
+        Queue<Pair> queue = new ArrayDeque<>();
         queue.offer(start);
 
         while (!queue.isEmpty()) { // x가 세로
-            int[] current = queue.poll();
-            int cx = current[0];
-            int cy = current[1];
-            int cs = current[2];
+            Pair current = queue.poll();
+            int cx = current.x;
+            int cy = current.y;
 
             for (int i = 0; i < 4; i++) {
                 int nx = cx + dx[i];
                 int ny = cy + dy[i];
                 if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
-                int ns = cs + cave[nx][ny];
+                int ns = sumRupee[cx][cy] + cave[nx][ny];
                 if (ns < sumRupee[nx][ny]) {
                     sumRupee[nx][ny] = ns;
-                    queue.offer(new int[]{nx, ny, ns});
+                    queue.offer(new Pair(nx, ny));
                 }
             }
         }
