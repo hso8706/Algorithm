@@ -1,150 +1,97 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.StringTokenizer;
 
+// 2 단계로 나우어서 생각
+//   1단계 : 두 명의 시작 위치를 어떻게 선택할 것인가? => 모든 가능한 위치에서 2개의 위치를 선택 (순서 X) 한 후, 규칙에 위한되는 버릴 것은 버린다. 조합
+//   2단계 : 각각의 위치에서 최대 벌꿀 채취는 어떻게 할 것인가? => 채취가 가능한 벌꿀통 중 어떤 것을 몇 개 선택하는 것이 최대값인 지 따진다. 부분집합
+// memoization : price
 public class Solution {
 
-    static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-    static StringTokenizer st;
+	static int T, N, M, C, max;
+	static int[][] map;
+	static int[] tgt, price; // src 로부터 2개의 시작점을 뽑는 조합을 생각할 때, 선택된 2개의 위치가 저장되는 공간
+	
+	public static void main(String[] args) throws Exception{
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		T = Integer.parseInt(br.readLine());
+		
+		for (int t = 1; t <= T; t++) {
+			StringTokenizer st = new StringTokenizer(br.readLine());
+			N = Integer.parseInt(st.nextToken());
+			M = Integer.parseInt(st.nextToken());
+			C = Integer.parseInt(st.nextToken());
+			
+			map = new int[N][N];
+			tgt = new int[2];
+			price = new int[N*N];
+			
+			max = Integer.MIN_VALUE;
+			for (int i = 0; i < N; i++) {
+				st = new StringTokenizer(br.readLine());
+				for (int j = 0; j < N; j++) {
+					map[i][j] = Integer.parseInt(st.nextToken());
+				}
+			}
+			// 입력 완료
+			
+			comb(0, 0);
+			System.out.println("#" + t + " " + max);
+		}
+	}
 
-    /*
-    - 정사각형 벌통
-    - 각 칸은 꿀의 양
-    - N: 벌통의 size, M: 벌통의 개수
-    - 두 명의 일꾼
-        - 각 일꾼은 M개의 벌통만큼 가로로 연속되도록 선택 할 수 있음
-        - 두 명의 일꾼은 선택한 벌통이 겹치면 안됨.
-        - 하나의 벌통에서 채취한 꿀은 하나의 통에 담는다. (여러 통을 합치지 않는다)
-        - 각 일꾼이 채취할 수 있는 꿀의 양은 한정되어있다(C)
-
-    - 일꾼이 담당할 벌통 정하기
-        - 조합 이용
-            - 각 일꾼의 시작점을 정한다.
-            - 각 일꾼의 시작점의 거리가 M 이상이어야 한다. (M 미만은 겹친다고 판단할 수 있음.)
-    - 담당 벌통들에서 어떤 벌통들의 꿀을 떠야 최대의 이익이 나는지
-        - 담당 벌통 배열의 부분 집합을 구하고, 부분 집합의 요소 총합이 C 이하인지 판단
-        - 최대 꿀양을 갱신하며 진행
-     */
-    static int T, N, M, C;
-    static int[][] combs;
-    static int[] a_worker;
-    static int[] b_worker;
-    static int maxValue;
-    static boolean[] isSelected_A;
-    static boolean[] isSelected_B;
-
-    public static void main(String[] args) throws IOException {
-        T = Integer.parseInt(bf.readLine());
-        for (int t = 1; t < T + 1; t++) {
-            bw.write("#" + t + " ");
-
-            st = new StringTokenizer(bf.readLine());
-            N = Integer.parseInt(st.nextToken());
-            M = Integer.parseInt(st.nextToken());
-            C = Integer.parseInt(st.nextToken());
-            combs = new int[N][N];
-            a_worker = new int[M];
-            b_worker = new int[M];
-            maxValue = 0;
-            for (int i = 0; i < N; i++) {
-                st = new StringTokenizer(bf.readLine());
-                for (int j = 0; j < N; j++) {
-                    combs[i][j] = Integer.parseInt(st.nextToken());
-                }
-            }
-
-            for (int i = 0; i < N; i++) {//a
-                for (int j = 0; j <= N - M; j++) {//a
-                    for (int aw = 0; aw < M; aw++) {//a_combs
-                        a_worker[aw] = combs[i][j + aw];
-                    }
-                    for (int a = i; a < N; a++) {//b
-                        if (a == i) {
-                            if (j + M >= N) {
-                                continue;
-                            }
-                            for (int b = j + M; b <= N - M; b++) {//b
-                                for (int bw = 0; bw < M; bw++) {//b_combs
-                                    b_worker[bw] = combs[a][b + bw];
-                                }
-                                //maxValue 갱신
-                                // 부분 집합
-                                isSelected_A = new boolean[M];
-                                subset_A(0);
-                            }
-                        } else {
-                            for (int b = 0; b <= N - M; b++) {//b
-                                for (int bw = 0; bw < M; bw++) {//b_combs
-                                    b_worker[bw] = combs[a][b + bw];
-                                }
-                                //maxValue 갱신
-                                isSelected_A = new boolean[M];
-                                subset_A(0);
-                            }
-                        }
-                    }
-                }
-            }
-            bw.write(maxValue + "\n");
-        }
-        bw.flush();
-        bw.close();
-    }
-
-    private static void subset_A(int cnt) {
-        if (cnt == M) {
-            int check = 0;
-            int sum = 0;
-            for (int i = 0; i < M; i++) {
-                if (isSelected_A[i]) {
-                    check += a_worker[i];
-                }
-            }
-            if (check <= C) {
-                for (int i = 0; i < M; i++) {
-                    if (isSelected_A[i]) {
-                        sum += Math.pow(a_worker[i], 2);
-                    }
-                }
-                isSelected_B = new boolean[M];
-                subset_B(0, sum);
-            }
-            return;
-        }
-
-        isSelected_A[cnt] = true;
-        subset_A(cnt + 1);
-        isSelected_A[cnt] = false;
-        subset_A(cnt + 1);
-    }
-
-    private static void subset_B(int cnt, int a_sum) {
-        if (cnt == M) {
-            int check = 0;
-            int sum = 0;
-            for (int i = 0; i < M; i++) {
-                if (isSelected_B[i]) {
-                    check += b_worker[i];
-                }
-            }
-            if (check <= C) {
-                for (int i = 0; i < M; i++) {
-                    if (isSelected_B[i]) {
-                        sum += Math.pow(b_worker[i], 2);
-                    }
-                }
-                maxValue = Math.max(maxValue, (a_sum + sum));
-            }
-            return;
-        }
-
-        isSelected_B[cnt] = true;
-        subset_B(cnt + 1, a_sum);
-        isSelected_B[cnt] = false;
-        subset_B(cnt + 1, a_sum);
-    }
+	static void calcMax(int idx) { // N*N 자리를 1열로 고려, idx 위치에서 연속적인 M 의 벌꿀 중 최대를 고려
+		// 부분집합
+		dfs( idx, idx + M, 0, idx, 0 );
+	}
+	// sum : 자리에서 채취하는 벌꿀
+	// priceSum : 누적 채취하는 벌꿀
+	static void dfs(int srcIdx, int tgtIdx, int sum, int originIdx, int priceSum) {
+		// 기저조건
+		if( srcIdx == tgtIdx ) return;
+		
+		// 벌꿀 채취
+		int val = map[srcIdx/N][srcIdx%N];
+		int currPriceSum = 0;
+		if( sum + val <= C ) {
+			currPriceSum = priceSum + (int) Math.pow(val, 2);
+			price[originIdx] = Math.max(price[originIdx], currPriceSum);
+		}
+		
+		dfs( srcIdx + 1, tgtIdx, sum, originIdx, priceSum ); // 비선택
+		dfs( srcIdx + 1, tgtIdx, sum + val, originIdx, currPriceSum ); // 선택
+	}
+	
+	static void comb(int srcIdx, int tgtIdx) {
+		// 기저조건
+		if( tgtIdx == 2 ) { // tgt 갯수만큼 선택완료
+			// complete code
+			// 두 위치가 겹치는 지 확인
+			// 앞 자리 tgt[0] 부터 M 거리안에 tgt[1] 없으면 된다.
+			if( tgt[0] < tgt[1] && tgt[1] <= tgt[0] + M - 1 ) return;
+			
+			// 같은 행에 있는지
+			if( tgt[0] / N != (tgt[0] + M - 1) / N ) return;
+			if( tgt[1] / N != (tgt[1] + M - 1) / N ) return;
+			
+			
+			// 벌꿀채취를 위해 선택된 tgt[0], tgt[1] 두 위치는 1단계 통과
+			// 2단계
+			// 각자 위치에서 최대값을 가져온다. 그런 뒤 2개를 합하여 큰 값을 max 와 비교해서 선택
+			if( price[ tgt[0] ] == 0 ) calcMax( tgt[0] );
+			if( price[ tgt[1] ] == 0 ) calcMax( tgt[1] );
+			max = Math.max( max,  price[ tgt[0] ] + price[ tgt[1] ] );
+			return;
+		}
+		
+		// 기저조건
+		if( srcIdx == N*N) return; // src 로부터 선택하는데 src 를 모두 다 고려했다.
+		
+		tgt[tgtIdx] = srcIdx; // 좌표의 index로 생각
+		
+		// 선택과 비선택
+		comb( srcIdx + 1, tgtIdx + 1); // 현재 선택을 만족하고 tgt의 다음 선택을 고려
+		comb( srcIdx + 1, tgtIdx); // 현재 선택을 만족 하지 않고 tgt의 현재를 다시 고려
+		
+	}
 }
