@@ -1,94 +1,99 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.StringTokenizer;
 
 public class Main {
     static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
     static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
     static StringTokenizer st;
 
-    static int N, M, V; //N: 정점, M: 간선, V: 시작 정점 번호
-//    static class Node{
-//        int vertex;
-//        Node link;
-//
-//        public Node(int vertex, Node link) {
-//            this.vertex = vertex;
-//            this.link = link;
-//        }
-//    }
-//    static Node[] nodes;
-    static ArrayList<Integer>[] nodes;
+    /*
+    # 초기화
+    - N,M,V 초기화
+    - ArrayList[] 을 통해서 양방향 그래프 초기화 => 양방향 그래프
+    - 각 리스트는 오름차순으로 정렬 => 숫자가 작은 순부터 탐색
+
+    # BFS
+    - 방문 배열 초기화
+    - bfs 진행
+
+    # DFS
+    - 방문 배열 초기화
+    - dfs 진행
+     */
+    static int N, M, V;
+    static ArrayList<Integer>[] adjList;
     public static void main(String[] args) throws IOException {
+
+        // 초기화
+        init();
+        // dfs 탐색 로직
+        dfs(V, new boolean[N+1]);
+        bw.write("\n");
+        // bfs 탐색 로직
+        bfs(V);
+        bw.flush();
+        bw.close();
+    }
+
+    private static void dfs(int v, boolean[] visited) throws IOException {
+        visited[v] = true;
+        bw.write(v+ " ");
+        for (int next : adjList[v]){
+            if(!visited[next]){
+                dfs(next, visited);
+            }
+        }
+    }
+
+    private static void bfs(int v) throws IOException {
+        boolean[] visited = new boolean[N+1];
+        Deque<Integer> deque = new ArrayDeque<>();
+        deque.offer(v);
+        visited[v] = true;
+
+        while(!deque.isEmpty()){
+            int nv = deque.poll();
+            bw.write(nv + " ");
+            for (int next : adjList[nv]){
+                if(!visited[next]){
+                    visited[next] = true;
+                    deque.offer(next);
+                }
+            }
+        }
+    }
+
+    private static void init() throws IOException {
         st = new StringTokenizer(bf.readLine());
         N = Integer.parseInt(st.nextToken());
         M = Integer.parseInt(st.nextToken());
         V = Integer.parseInt(st.nextToken());
-//        nodes = new Node[N+1];
-        nodes = new ArrayList[N+1];
-        for (int i = 0; i < N+1; i++) {
-            nodes[i] = new ArrayList<>();
+
+        adjList = new ArrayList[N+1];
+        for (int i = 1; i <= N; i++) {
+            adjList[i] = new ArrayList<>();
         }
 
-        int from, to;
-        for (int i = 0; i <M; i++) { // 간선 개수만큼 순회
+        for (int i = 1; i <= M; i++) {
             st = new StringTokenizer(bf.readLine());
-            from = Integer.parseInt(st.nextToken());
-            to = Integer.parseInt(st.nextToken());
-//            nodes[from] = new Node(to, nodes[from]);
-//            nodes[to] = new Node(from, nodes[to]);
-            nodes[from].add(to);
-            nodes[to].add(from);
-        }
-        for (int i = 0; i < N+1; i++) {
-            Collections.sort(nodes[i]);
+            int start = Integer.parseInt(st.nextToken());
+            int end = Integer.parseInt(st.nextToken());
+            adjList[start].add(end);
+            adjList[end].add(start);
         }
 
-        dfs(V, new boolean[N+1]);
-        System.out.println();
-        bfs(V);
-    }
-
-    private static void bfs(int start) {
-        Queue<Integer> queue = new ArrayDeque<>();
-        boolean[] visited = new boolean[N+1];
-
-        queue.offer(start);
-        visited[start] = true;
-
-        int current = 0;
-        while(!queue.isEmpty()){
-            current = queue.poll();
-            System.out.print(current + " ");
-
-//            for (Node temp = nodes[current]; temp != null; temp = temp.link){
-//                if(!visited[temp.vertex]){
-//                    queue.offer(temp.vertex);
-//                    visited[temp.vertex] = true;
-//                }
-//            }
-            for (int vertex : nodes[current]) {// 인접 행렬과의 차이점
-                if(!visited[vertex]){ // 인접 행렬과의 차이점
-                    queue.offer(vertex);
-                    visited[vertex] = true;
-                }
-            }
-        }
-
-    }
-
-    private static void dfs(int current, boolean[] visited) {
-        visited[current] = true;
-        System.out.print(current + " ");
-
-//        for (Node temp = nodes[current]; temp != null; temp = temp.link) {
-//            if(!visited[temp.vertex]){
-//                dfs(temp.vertex, visited);
-//            }
-//        }
-        for (int vertex : nodes[current]) {//헤드 노드부터 시작, 노드가 null 아니면 순회, link 필드의 값을 데이터 필드 값에 할당
-            if(!visited[vertex]){
-                dfs(vertex, visited);
-            }
+        for (int i = 1; i <= N; i++) {
+            Collections.sort(adjList[i]);
         }
     }
+
 }
