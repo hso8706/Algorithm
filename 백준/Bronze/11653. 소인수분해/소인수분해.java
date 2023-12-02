@@ -18,10 +18,12 @@ public class Main {
     - 소수 집합을 순회하며 나눠지는 소수가 있을때마다 출력 저장
     - 소수 집합 내에 나눠지는 수가 없을때까지 반복
 
-    #
+    # 성공-느림
     - 필요할 때마다 소수인지 검증하고 출력
+
+    #
+    - 소수를 구하는 반복문 내에서 출력하기
      */
-//    static List<Integer> primes;
     static int N;
     public static void main(String[] args) throws IOException {
 
@@ -32,48 +34,19 @@ public class Main {
 
     private static void printFactorization() throws IOException {
         int number = N;
-        if(number != 1) {
-            while (true) {
-//                for (int prime : primes) {
-//                    if (number % prime == 0) {
-//                        bw.write(prime + "\n");
-//                        number /= prime;
-//                        break;
-//                    }
-//                }
-                for (int i = 2; i <= number; i++) {
-                    if(number%i==0 && isPrime(i)) {
-                        bw.write(i+"\n");
-                        number /= i;
-                        break;
-                    }
-                }
-                if (number == 1) {
-                    break;
-                }
+        for (int i = 2; i*i <= number ; i++) {
+            while(number%i == 0){
+                bw.write(i+"\n");
+                number /= i;
             }
-            bw.flush();
-            bw.close();
         }
+        if(number != 1) bw.write(number + "\n");
+        bw.flush();
+        bw.close();
     }
 
     private static void init() throws IOException {
-//        primes = new ArrayList<>();
-//        for (int i = 2; i <= 10_000_000; i++) {
-//            if(isPrime(i)) primes.add(i);
-//        }
 
         N = Integer.parseInt(bf.readLine());
-    }
-
-    private static boolean isPrime(int target) {
-        boolean checker = true;
-        for(int i=1; i<=Math.sqrt(target); i++){
-            if(i!=1 && i!=target && target%i==0) {
-                checker=false;
-                break;
-            }
-        }
-        return checker;
     }
 }
