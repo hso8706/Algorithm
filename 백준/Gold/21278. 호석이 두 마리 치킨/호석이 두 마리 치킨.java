@@ -1,132 +1,92 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.PriorityQueue;
-import java.util.StringTokenizer;
-
+import java.io.*;
+import java.util.*;
 public class Main {
-    static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-    static BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-    static StringTokenizer st;
-
-    /*
-    - 2개 설정 후 개별 다익스트라
-     */
-    static class Node implements Comparable<Node>{
-        int node;
-        int weight;
-
-        public Node(int node, int weight) {
-            this.node = node;
-            this.weight = weight;
-        }
-
-        @Override
-        public int compareTo(Node o) {
-            return this.weight - o.weight;
-        }
-    }
+    static int[][] floyd;
     static int N, M;
-    static ArrayList<Node>[] adjList;
-    static int[][] dist;
-    static int INF = Integer.MAX_VALUE;
-    static int[] nums;
-    static int[] selected;
-    static int A, B, W;
     public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+        
+        StringTokenizer st1 = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st1.nextToken());
+        M = Integer.parseInt(st1.nextToken());
 
-        init();
-        selectTwo(0,1);
-        System.out.println(A+" "+B+" "+W);
-    }
-    //combination
-    private static void selectTwo(int cnt, int start) {
-        if(cnt==2){
-            dist = new int[2][N+1];
-            for (int i = 0; i < 2; i++) {
-                Arrays.fill(dist[i], INF);
-                dijkstra(selected[i], i);
-//                System.out.println(selected[i]+": ["+i+"]"+Arrays.toString(dist[i]));
+        floyd = new int[N][N];
+        
+        for(int i = 0 ; i < N ; i++) {
+            for(int j = 0 ; j < N ; j++) {
+                floyd[i][j] = 101; //점의 최대 개수는 100개이므로, 점과 점은 아무리 멀어도 거리 99가 최대임.
+                //즉, 거리 101로 해주는 것은 다익스트라의 Integer.MAX_VALUE와 같음.
             }
-            int sum = 0;
-            int a = 0;
-            int b = 0;
-            for (int i = 1; i < N+1; i++) {
-                if(dist[0][i]==0) {
-                    a = i;
-                    continue;
-                }
-                else if (dist[1][i] == 0){
-                    b = i;
-                    continue;
-                }
-                int minValue = Math.min(dist[0][i], dist[1][i]);
-                sum += minValue*2;
-            }
-            if(sum != 0 && sum < W){
-                A = a;
-                B = b;
-                W = sum;
-            }
-//            System.out.println();
-            return;
         }
-
-        for (int i = start; i < nums.length; i++) {
-            selected[cnt] = nums[i];
-            selectTwo(cnt+1, i+1);
+        //존재하는 길이 없다. 를 101 로 표현.
+        //있으면, 거리는 전부 1이니 해당 값 넣기
+        
+        for(int i = 0 ; i < M ; i++) {
+            StringTokenizer st2 = new StringTokenizer(br.readLine());
+            int a = Integer.parseInt(st2.nextToken());
+            int b = Integer.parseInt(st2.nextToken());
+            floyd[a-1][b-1] = 1;
+            floyd[b-1][a-1] = 1;
         }
-    }
+        //초깃값.
 
-    private static void dijkstra(int start, int idx) {
-        PriorityQueue<Node> pq = new PriorityQueue<>(); // 다익스트라 - PQ
-        boolean[] visited = new boolean[N+1];
-        pq.offer(new Node(start,0)); // 시작 지점
-        dist[idx][start] = 0; // 시작 지점 최소 거리 0
-
-        while(!pq.isEmpty()){
-            Node current = pq.poll();
-            if(visited[current.node]) continue; // 방문 처리 된 곳 패스
-            visited[current.node] = true; // 현재 지점만 방문 처리
-
-            for(Node next : adjList[current.node]){
-                if(!visited[next.node] && dist[idx][next.node] > dist[idx][current.node] + next.weight){
-                    dist[idx][next.node] = dist[idx][current.node] + next.weight;
-                    pq.add(new Node(next.node, dist[idx][next.node]));
+        for(int i = 0 ; i < N ; i++) {
+            for(int j = 0 ; j < N ; j++) {
+                if(i == j) continue;
+                for(int k = 0 ; k < N ; k++) {
+                    if(i == k || j == k) continue;
+                    
+                    if(floyd[j][k] > floyd[j][i] + floyd[i][k]) floyd[j][k] = floyd[j][i] + floyd[i][k];
+                    
                 }
             }
         }
+        
+        //플로이드 워셜로 각 점에서 각 점까지의 거리의 최솟값 다 채운 후
+        //플로이드 워셜 로직 = a->c로 가는 값보다 b를 거쳐 a->b + b->c 값이 더 작다면 작은 값을 택하는 알고리즘.
+        
+        int min = Integer.MAX_VALUE;
+        int n1 = 0;
+        int n2 = 0;
+
+        for(int i = 0 ; i < N ; i++) {
+            for(int j = 0 ; j < N ; j++) {
+                if(i == j) continue;
+                //두 점을 고른다. (1, 2부터 N-1, N까지)
+
+                int now = sum(i, j);
+                //고른 두 점을 기준으로 각각의 점의 거리의 최솟값을 더해나간다.
+                //1, 2를 골랐으면
+                //sum(1, 2) = 그 둘(1, 2)에서 3까지의 거리의 최솟값 + ... + 그 둘(1, 2)에서 N 까지의 거리의 최솟값
+
+                if(min > now) {
+                    n1 = i+1;
+                    n2 = j+1;
+                    min = now;
+                }
+                //해당 값이 최솟값이 된다면 두 점을 기록해놓는다.
+
+            }
+        }
+
+        //기록한 두 점과 최솟값을 출력한다.
+        bw.write(String.valueOf(n1) + " " + String.valueOf(n2) + " " + String.valueOf(min*2)); //min*2는 왕복이라서.
+        bw.flush();
+        bw.close();
+
+
     }
 
-    private static void init() throws IOException {
-        st = new StringTokenizer(bf.readLine());
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
-
-        adjList = new ArrayList[N+1];
-        for (int i = 1; i < N+1; i++) {
-            adjList[i] = new ArrayList<>();
+    static int sum(int n1, int n2) {
+        int sum = 0;
+        for(int i = 0 ; i < N ; i++) {
+            if(i == n1 || i == n2) continue;
+            sum += Math.min(floyd[n1][i], floyd[n2][i]);
         }
 
-        for (int i = 0; i < M; i++) {
-            st = new StringTokenizer(bf.readLine());
-            int a = Integer.parseInt(st.nextToken());
-            int b = Integer.parseInt(st.nextToken());
-            adjList[a].add(new Node(b, 1));
-            adjList[b].add(new Node(a, 1));
-        }
-
-        nums = new int[N+1];
-        selected = new int[2];
-        for (int i = 1; i < N+1; i++) {
-            nums[i] = i;
-        }
-        A=B=0;
-        W= Integer.MAX_VALUE;
+        return sum;
     }
+
 
 }
