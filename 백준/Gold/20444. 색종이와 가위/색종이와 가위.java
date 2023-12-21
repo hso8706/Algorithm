@@ -24,19 +24,22 @@ public class Main {
 
     private static void binarySearch(long target) throws IOException {
         long low = 0;
-        long high = n/2;
+        long high = n;
 
         while(low<=high){
             long mid = (low+high)/2;
-            long x = low;
-            long y = n-low;
+            long x = mid;
+            long y = n-mid;
             long total = (x+1)*(y+1);
             if(total == target) {
                 bw.write("YES");
                 return;
             }
+            else if(total > target){
+                high = mid - 1;
+            }
             else {
-                low += 1;
+                low = mid + 1;
             }
         }
         bw.write("NO");
